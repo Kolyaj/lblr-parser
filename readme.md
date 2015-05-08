@@ -63,6 +63,6 @@
 
 ## API
 
-    * `Constructor([boolean, optional] trimLine)`
-    * `parser.registerLineProcessor([RegExp] pattern, [Function] fn)`. Fn arguments: line, RegExp.$0, RegExp.$1, ..., meta
-    * `[Promise] parser.parse([string] input)`
+* `Constructor([boolean, optional] trimLine)`
+* `parser.registerLineProcessor([RegExp] pattern, [Function] fn)`. Fn arguments: line, RegExp.$0, RegExp.$1, ..., meta
+* `[Promise] parser.parse([string] input)`
