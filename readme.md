@@ -2,7 +2,7 @@
 
 ### Simple
 
-    var parser = require('parser')();
+    var parser = require('lblr-parser')();
     parser.registerLineProcessor(/^#(\d+)/, function(line, match, number) {
         console.log(number);
     });
@@ -11,7 +11,7 @@
 
 ### Recursively
 
-    var parser = require('parser')();
+    var parser = require('lblr-parser')();
     parser.registerLineProcessor(/^#(\d+)/, function(line, match, number) {
         console.log(number);
     });
@@ -23,7 +23,7 @@
 
 ### Recursively async
 
-    var parser = require('parser')();
+    var parser = require('lblr-parser')();
     parser.registerLineProcessor(/^#(\d+)/, function(line, match, number) {
         console.log(number);
     });
@@ -41,7 +41,7 @@
 
 ### Meta data
 
-    var parser = Parser();
+    var parser = require('lblr-parser')();
     parser.registerLineProcessor(/^\d+/, function(line, number, meta) {
         meta.push(number);
     });
@@ -53,7 +53,7 @@
 
 ### Trim lines
 
-    var parser = require('parser')(true);
+    var parser = require('lblr-parser')(true);
     parser.registerLineProcessor(/^#(\d+)/, function(line, match, number) {
         console.log(number);
     });

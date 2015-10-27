@@ -59,4 +59,4 @@ LBLRParser.prototype.registerLineProcessor = function(pattern, fn) {
 };
 
 
-exports.Parser = LBLRParser;
+module.exports.Parser = LBLRParser;
