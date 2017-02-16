@@ -1,43 +1,77 @@
-var Q = require('q');
 var assert = require('assert');
-var Parser = require('../index.js');
+var createParser = require('..');
 
-it('simple', function() {
-    var parser = Parser();
-    parser.registerLineProcessor(/^\d+/, function(line, number, result) {
+it('simple', function(callback) {
+    var parser = createParser();
+    var result = [];
+    parser.on('finish', () => {
+        assert.deepEqual(result, ['1', '2']);
+        callback();
+    });
+    parser.on('error', callback);
+
+    parser.registerLineProcessor(/^\d+/, function(number) {
         result.push(number);
     });
-    return parser.parse('foo\n1\nbar\n2\nbaz', []).then(function(result) {
-        assert.deepEqual(result, ['1', '2']);
-    });
+    parser.write('foo\n');
+    parser.write('1\n');
+    parser.write('foo\n');
+    parser.write('2\n');
+    parser.write('foo\n');
+    parser.end('bar');
 });
 
-it('recursively', function() {
-    var parser = Parser();
-    parser.registerLineProcessor(/^\*(\d+)/, function(line, match, number, result) {
+it('big chunk', function(callback) {
+    var parser = createParser();
+    var result = [];
+    parser.on('finish', () => {
+        assert.deepEqual(result, ['1', '2']);
+        callback();
+    });
+    parser.on('error', callback);
+
+    parser.registerLineProcessor(/^\d+/, function(number) {
         result.push(number);
     });
-    parser.registerLineProcessor(/^\d+/, function(line, number) {
+    parser.end('foo\n1\nfoo\n2\nfoo\n');
+});
+
+it('recursively', function(callback) {
+    var parser = createParser();
+    var result = [];
+    parser.on('finish', () => {
+        assert.deepEqual(result, ['4', '9']);
+        callback();
+    });
+    parser.on('error', callback);
+
+    parser.registerLineProcessor(/^\*(\d+)/, function(match, number) {
+        result.push(number);
+    });
+    parser.registerLineProcessor(/^\d+/, function(number) {
         return '*' + (number * number) + '\n';
     });
-    return parser.parse('foo\n2\nbar\n3\nbaz', []).then(function(result) {
-        assert.deepEqual(result, ['4', '9']);
-    });
+    parser.end('foo\n2\nbar\n3\nbaz');
 });
 
-it('recursively promise', function() {
-    var parser = Parser();
-    parser.registerLineProcessor(/^\*(\d+)/, function(line, match, number, result) {
+it('recursively promise', function(callback) {
+    var parser = createParser();
+    var result = [];
+    parser.on('finish', () => {
+        assert.deepEqual(result, ['4', '9']);
+        callback();
+    });
+    parser.on('error', callback);
+
+    parser.registerLineProcessor(/^\*(\d+)/, function(match, number) {
         result.push(number);
     });
-    parser.registerLineProcessor(/^\d+/, function(line, number) {
-        return Q.Promise(function(resolve) {
-            setTimeout(function() {
+    parser.registerLineProcessor(/^\d+/, function(number) {
+        return new Promise((resolve) => {
+            setTimeout(() => {
                 resolve('*' + (number * number) + '\n');
-            }, 200);
+            }, 20);
         });
     });
-    return parser.parse('foo\n2\nbar\n3\nbaz', []).then(function(result) {
-        assert.deepEqual(result, ['4', '9']);
-    });
+    parser.end('foo\n2\nbar\n3\nbaz');
 });

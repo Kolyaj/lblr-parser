@@ -1,62 +1,61 @@
-var Q = require('q');
+var iclass = require('iclass');
+var {Writable} = require('stream');
 
 module.exports = function(trimLines) {
-    return new LBLRParser(trimLines);
+    return new module.exports.Parser(trimLines);
 };
 
-var LBLRParser = function(trimLines) {
-    this._trimLines = trimLines;
-    this._processors = [];
-};
+module.exports.Parser = iclass.create(Writable, {
+    constructor: function(trimLines) {
+        Writable.call(this, {decodeStrings: false});
 
-LBLRParser.prototype.parse = function(input, meta) {
-    var processors = this._processors;
-    var trimLines = this._trimLines;
-    return Q.Promise(function(resolve, reject) {
-        (function next() {
-            while (input.length) {
-                var lnIndex = input.indexOf('\n');
-                if (lnIndex == -1) {
-                    lnIndex = input.length;
+        this._trimLines = trimLines;
+        this._processors = [];
+        this._tail = '';
+    },
+
+    registerLineProcessor: function(pattern, fn) {
+        this._processors.push({pattern: pattern, fn: fn});
+    },
+
+
+    _write: function(chunk, enc, callback) {
+        var isEnd = false;
+        if (chunk == null) {
+            isEnd = true;
+        } else {
+            this._tail += chunk;
+        }
+
+        var next = () => {
+            var newLineIndex = this._tail.indexOf('\n');
+            if (newLineIndex > -1 || (isEnd && this._tail.length > 0)) {
+                if (newLineIndex == -1) {
+                    newLineIndex = this._tail.length;
                 }
-                var line = input.substr(0, lnIndex + 1);
-                input = input.substr(lnIndex + 1);
-                var preparedLine = trimLines ? line.trim() : line;
-                for (var i = 0; i < processors.length; i++) {
-                    var matches = preparedLine.match(processors[i].pattern);
-                    if (matches) {
-                        var processorResult = processors[i].fn.apply(null, [line].concat(matches).concat([meta]));
-                        if (processorResult && typeof processorResult.then == 'function') {
-                            processorResult.then(function(result) {
-                                if (typeof result == 'string') {
-                                    input = result + input;
+                var line = this._tail.substring(0, newLineIndex + 1);
+                this._tail = this._tail.substring(newLineIndex + 1);
+
+                var preparedLine = this._trimLines ? line.trim() : line;
+                return Promise.resolve().then(() => {
+                    for (var i = 0; i < this._processors.length; i++) {
+                        var matches = preparedLine.match(this._processors[i].pattern);
+                        if (matches) {
+                            return Promise.resolve().then(() => {
+                                return this._processors[i].fn.apply(null, matches.concat([line]));
+                            }).then((processorResult) => {
+                                if (typeof processorResult == 'string') {
+                                    this._tail = processorResult + this._tail;
                                 }
-                                next();
-                            }, function(err) {
-                                reject(err);
                             });
-                            return;
                         }
-                        if (typeof processorResult == 'string') {
-                            input = processorResult + input;
-                        }
-                        break;
                     }
-                }
+                }).then(next);
             }
-            setImmediate(function() {
-                resolve(meta);
-            });
-        })();
-    });
-};
+        };
 
-LBLRParser.prototype.registerLineProcessor = function(pattern, fn) {
-    this._processors.unshift({
-        pattern: pattern,
-        fn: fn
-    });
-};
-
-
-module.exports.Parser = LBLRParser;
+        Promise.resolve(next()).then(() => {
+            callback();
+        }).catch(callback);
+    }
+});
