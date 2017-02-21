@@ -1,7 +1,7 @@
 {
     "name": "lblr-parser",
     "description": "Line-by-line recursively parser",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "dependencies": {
         "iclass": "0.0.4"
     },

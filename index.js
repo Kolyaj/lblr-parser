@@ -12,6 +12,12 @@ module.exports.Parser = iclass.create(Writable, {
         this._trimLines = trimLines;
         this._processors = [];
         this._tail = '';
+
+        this.once('finish', () => {
+            this._processTail(true).then(() => {
+                this.emit('complete');
+            });
+        });
     },
 
     registerLineProcessor: function(pattern, fn) {
@@ -20,13 +26,11 @@ module.exports.Parser = iclass.create(Writable, {
 
 
     _write: function(chunk, enc, callback) {
-        var isEnd = false;
-        if (chunk == null) {
-            isEnd = true;
-        } else {
-            this._tail += chunk;
-        }
+        this._tail += chunk;
+        this._processTail().then(callback).catch(callback);
+    },
 
+    _processTail: function(isEnd) {
         var next = () => {
             var newLineIndex = this._tail.indexOf('\n');
             if (newLineIndex > -1 || (isEnd && this._tail.length > 0)) {
@@ -53,9 +57,6 @@ module.exports.Parser = iclass.create(Writable, {
                 }).then(next);
             }
         };
-
-        Promise.resolve(next()).then(() => {
-            callback();
-        }).catch(callback);
+        return Promise.resolve(next());
     }
 });

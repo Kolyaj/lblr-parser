@@ -42,5 +42,6 @@ Parser is Writable stream.
 
 ## API
 
+* Event `complete` is emitted after the `finish` event has been emitted, and all lines has been asynchronously parsed.
 * `Constructor([boolean, optional] trimLine)`
 * `parser.registerLineProcessor([RegExp] pattern, [Function] fn)`. Fn arguments: line, RegExp.$0, RegExp.$1, ..., meta
