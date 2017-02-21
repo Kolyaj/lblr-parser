@@ -5,7 +5,11 @@ it('simple', function(callback) {
     var parser = createParser();
     var result = [];
     parser.on('finish', () => {
-        assert.deepEqual(result, ['1', '2']);
+        try {
+            assert.deepEqual(result, ['1', '2']);
+        } catch (e) {
+            return callback(e);
+        }
         callback();
     });
     parser.on('error', callback);
@@ -25,7 +29,11 @@ it('big chunk', function(callback) {
     var parser = createParser();
     var result = [];
     parser.on('finish', () => {
-        assert.deepEqual(result, ['1', '2']);
+        try {
+            assert.deepEqual(result, ['1', '2']);
+        } catch (e) {
+            return callback(e);
+        }
         callback();
     });
     parser.on('error', callback);
@@ -40,7 +48,11 @@ it('recursively', function(callback) {
     var parser = createParser();
     var result = [];
     parser.on('finish', () => {
-        assert.deepEqual(result, ['4', '9']);
+        try {
+            assert.deepEqual(result, ['4', '9']);
+        } catch (e) {
+            return callback(e);
+        }
         callback();
     });
     parser.on('error', callback);
@@ -58,7 +70,11 @@ it('recursively promise', function(callback) {
     var parser = createParser();
     var result = [];
     parser.on('finish', () => {
-        assert.deepEqual(result, ['4', '9']);
+        try {
+            assert.deepEqual(result, ['4', '9']);
+        } catch (e) {
+            return callback(e);
+        }
         callback();
     });
     parser.on('error', callback);
@@ -72,6 +88,28 @@ it('recursively promise', function(callback) {
                 resolve('*' + (number * number) + '\n');
             }, 20);
         });
+    });
+    parser.end('foo\n2\nbar\n3\nbaz');
+});
+
+it('processors sorting', function(callback) {
+    var parser = createParser();
+    var result = [];
+    parser.on('finish', () => {
+        try {
+            assert.deepEqual(result, ['2', '3']);
+        } catch (e) {
+            return callback(e);
+        }
+        callback();
+    });
+    parser.on('error', callback);
+
+    parser.registerLineProcessor(/^\d+/, function() {
+
+    });
+    parser.registerLineProcessor(/^\d+/, function(number) {
+        result.push(number);
     });
     parser.end('foo\n2\nbar\n3\nbaz');
 });

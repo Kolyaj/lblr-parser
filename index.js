@@ -15,7 +15,7 @@ module.exports.Parser = iclass.create(Writable, {
     },
 
     registerLineProcessor: function(pattern, fn) {
-        this._processors.push({pattern: pattern, fn: fn});
+        this._processors.unshift({pattern: pattern, fn: fn});
     },
 
 

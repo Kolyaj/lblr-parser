@@ -1,12 +1,16 @@
 {
     "name": "lblr-parser",
     "description": "Line-by-line recursively parser",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "dependencies": {
         "iclass": "0.0.4"
     },
     "devDependencies": {
         "mocha": "^2.2.4"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/Kolyaj/lblr-parser.git"
     },
     "scripts": {
         "test": "mocha"
